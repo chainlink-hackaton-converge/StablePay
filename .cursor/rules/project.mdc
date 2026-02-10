@@ -1,0 +1,23 @@
+---
+description: Global project conventions for StablePay
+globs: ["**/*"]
+---
+
+# StablePay Project
+
+You are working on StablePay, a cross-border payroll and invoice settlement platform for the Chainlink Convergence Hackathon.
+
+## Tech Stack
+- Smart Contracts: Solidity ^0.8.24 on Arc chain (EVM, USDC gas, chain ID 5042002)
+- Oracle/Automation: Chainlink CRE TypeScript SDK v1.0.7+
+- Frontend: React Router v7 + TypeScript + shadcn/ui + Tailwind CSS v4
+- Backend: Rust + Axum + SQLx + PostgreSQL 17
+- Wallet: wagmi + viem
+
+## Key Conventions
+- This is a HACKATHON MVP. Prioritize working features over perfect code.
+- Always use TypeScript strict mode in TS files.
+- Use shadcn/ui components for all UI — never write raw HTML for forms, tables, buttons, etc.
+- All money amounts are in USDC (6 decimals on standard ERC-20, 18 decimals as Arc native gas).
+- Arc testnet RPC: https://rpc.testnet.arc.network, Chain ID: 5042002
+- Error handling: always handle errors gracefully, show user-friendly messages.

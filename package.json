@@ -1,0 +1,17 @@
+{
+  "name": "stablepay",
+  "private": true,
+  "workspaces": [
+    "contracts",
+    "cre-workflow",
+    "frontend"
+  ],
+  "scripts": {
+    "contracts:compile": "npm run compile -w contracts",
+    "contracts:deploy": "npm run deploy -w contracts",
+    "cre:simulate": "cd cre-workflow && cre workflow simulate",
+    "frontend:dev": "npm run dev -w frontend",
+    "db:up": "docker compose up -d postgres",
+    "db:down": "docker compose down"
+  }
+}

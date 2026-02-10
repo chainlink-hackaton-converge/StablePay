@@ -1,0 +1,15 @@
+---
+description: Backend conventions for Rust Axum + SQLx
+globs: ["backend/**/*.rs"]
+---
+
+# Backend Rules
+
+- Use Axum extractors (`State`, `Path`, `Json`, `Query`) for all handler parameters.
+- Use `sqlx::query_as!` macro for compile-time checked SQL queries.
+- Define custom error types with `thiserror`, implement `IntoResponse`.
+- All routes return `Result<Json<T>, AppError>`.
+- Use `uuid::Uuid` for all IDs, `chrono::NaiveDateTime` for timestamps.
+- Use database transactions (`pool.begin()`) for multi-table writes.
+- Log with `tracing::info!`, `tracing::error!`, etc. — never `println!`.
+- All API responses use consistent JSON shape: `{ "data": ... }` or `{ "error": "..." }`.

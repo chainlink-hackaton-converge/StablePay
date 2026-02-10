@@ -1,0 +1,17 @@
+{
+  "name": "@stablepay/cre-workflow",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "simulate": "cre workflow simulate"
+  },
+  "dependencies": {
+    "@chainlink/cre-sdk": "^1.0.7"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "@types/node": "^20.0.0"
+  }
+}

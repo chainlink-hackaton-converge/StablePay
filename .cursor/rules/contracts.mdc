@@ -1,0 +1,14 @@
+---
+description: Smart contract conventions for Solidity on Arc
+globs: ["contracts/**/*.sol"]
+---
+
+# Solidity Rules
+
+- Target Solidity ^0.8.24.
+- Use custom `error` definitions instead of `require` with string messages.
+- Use OpenZeppelin for access control and reentrancy guards.
+- Emit events for every state-changing function.
+- All amounts are uint256 representing USDC with appropriate decimals.
+- Use NatSpec comments on all public/external functions.
+- Keep contracts simple — this is an MVP. Avoid premature optimization.

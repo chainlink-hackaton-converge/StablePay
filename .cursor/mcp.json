@@ -1,0 +1,23 @@
+{
+  "mcpServers": {
+    "shadcn-ui": {
+      "command": "npx",
+      "args": ["-y", "@anthropic-ai/shadcn-mcp@latest"]
+    },
+    "docker": {
+      "command": "docker",
+      "args": ["run", "-i", "--rm",
+        "-v", "/var/run/docker.sock:/var/run/docker.sock",
+        "mcp/docker"
+      ]
+    },
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp@latest"]
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest"]
+    }
+  }
+}

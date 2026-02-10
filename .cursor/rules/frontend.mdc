@@ -1,0 +1,16 @@
+---
+description: Frontend conventions for React Router v7 + shadcn/ui
+globs: ["frontend/**/*.{ts,tsx}"]
+---
+
+# Frontend Rules
+
+- Use React Router v7 route modules with `loader`, `action`, and `ErrorBoundary` exports.
+- Use the generated `Route` type from `./+types/` for type safety on loader/action args.
+- Use `<Outlet />` in layout routes for nested rendering.
+- Use `useFetcher()` for mutations that don't navigate.
+- All UI components must use shadcn/ui from `~/components/ui/`.
+- Use the `cn()` utility from `~/lib/utils` for conditional class names.
+- Use `<Sonner />` toasts for success/error feedback, never `alert()`.
+- Dark mode is the default — all components should look good on dark backgrounds.
+- Backend API base URL: `http://localhost:3001/api`

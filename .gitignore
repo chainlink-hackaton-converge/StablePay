@@ -1,0 +1,32 @@
+node_modules/
+.env
+dist/
+build/
+.cache/
+
+# Hardhat
+contracts/artifacts/
+contracts/cache/
+contracts/typechain-types/
+
+# CRE
+cre-workflow/.secrets
+cre-workflow/dist/
+
+# Rust
+backend/target/
+
+# Frontend
+frontend/.react-router/
+
+# IDE
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+pgdata/

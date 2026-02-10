@@ -1,0 +1,16 @@
+---
+description: Chainlink CRE workflow conventions
+globs: ["cre-workflow/**/*.ts"]
+---
+
+# CRE Workflow Rules
+
+- Use direct imports: `import { handler, Runtime, HTTPClient, EVMClient } from "@chainlink/cre-sdk"`
+- Callbacks are STATELESS — no persistent state between executions.
+- Use `runtime.getSecret()` for API keys, never hardcode secrets.
+- Use `runtime.now()` for timestamps, not `Date.now()`.
+- Max 5 HTTP requests per execution, max 3 concurrent capability calls.
+- Max 10 EVM read calls per execution.
+- Cron minimum interval: 30 seconds.
+- Arc testnet chain ID: 5042002
+- Always handle errors in capability calls.
