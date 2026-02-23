@@ -1,5 +1,23 @@
 # StablePay Backend
 
+## Simple curl smoke tests
+
+Prerequisites:
+- backend is running (default: `http://localhost:3001`)
+- `curl` and `jq` installed
+
+Run:
+
+```bash
+bash scripts/smoke_routes.sh
+```
+
+Optional custom base URL:
+
+```bash
+BASE_URL=http://localhost:3001 bash scripts/smoke_routes.sh
+```
+
 ## Docker
 
 ```bash

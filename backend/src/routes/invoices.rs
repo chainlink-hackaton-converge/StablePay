@@ -1,15 +1,15 @@
 use axum::{
+    Json, Router,
     extract::{Path, State},
     routing::get,
-    Json, Router,
 };
 use uuid::Uuid;
 
 use crate::{
+    AppState,
     error::AppError,
     middleware::AuthClaims,
     models::{CreateInvoiceRequest, Invoice, UpdateInvoiceStatusRequest},
-    AppState,
 };
 
 pub fn router() -> Router<AppState> {
@@ -69,14 +69,13 @@ async fn get_invoice(
         .company_id
         .ok_or_else(|| AppError::BadRequest("No company associated".into()))?;
 
-    let invoice = sqlx::query_as::<_, Invoice>(
-        "SELECT * FROM invoices WHERE id = $1 AND company_id = $2",
-    )
-    .bind(id)
-    .bind(company_id)
-    .fetch_optional(&state.db)
-    .await?
-    .ok_or_else(|| AppError::NotFound("Invoice not found".into()))?;
+    let invoice =
+        sqlx::query_as::<_, Invoice>("SELECT * FROM invoices WHERE id = $1 AND company_id = $2")
+            .bind(id)
+            .bind(company_id)
+            .fetch_optional(&state.db)
+            .await?
+            .ok_or_else(|| AppError::NotFound("Invoice not found".into()))?;
 
     Ok(Json(invoice))
 }
@@ -92,14 +91,13 @@ async fn update_invoice(
         .ok_or_else(|| AppError::BadRequest("No company associated".into()))?;
 
     // Verify ownership
-    let _existing = sqlx::query_as::<_, Invoice>(
-        "SELECT * FROM invoices WHERE id = $1 AND company_id = $2",
-    )
-    .bind(id)
-    .bind(company_id)
-    .fetch_optional(&state.db)
-    .await?
-    .ok_or_else(|| AppError::NotFound("Invoice not found".into()))?;
+    let _existing =
+        sqlx::query_as::<_, Invoice>("SELECT * FROM invoices WHERE id = $1 AND company_id = $2")
+            .bind(id)
+            .bind(company_id)
+            .fetch_optional(&state.db)
+            .await?
+            .ok_or_else(|| AppError::NotFound("Invoice not found".into()))?;
 
     let invoice = sqlx::query_as::<_, Invoice>(
         "UPDATE invoices SET status = $1, escrow_address = COALESCE($2, escrow_address) WHERE id = $3 RETURNING *",

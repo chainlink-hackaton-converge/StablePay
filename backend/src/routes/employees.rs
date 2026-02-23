@@ -1,21 +1,26 @@
 use axum::{
+    Json, Router,
     extract::{Path, State},
     routing::get,
-    Json, Router,
 };
 use uuid::Uuid;
 
 use crate::{
+    AppState,
     error::AppError,
     middleware::AuthClaims,
     models::{CreateEmployeeRequest, Employee, UpdateEmployeeRequest},
-    AppState,
 };
 
 pub fn router() -> Router<AppState> {
     Router::new()
         .route("/", get(list_employees).post(create_employee))
-        .route("/{id}", get(get_employee).put(update_employee).delete(delete_employee))
+        .route(
+            "/{id}",
+            get(get_employee)
+                .put(update_employee)
+                .delete(delete_employee),
+        )
 }
 
 async fn list_employees(
@@ -71,14 +76,13 @@ async fn get_employee(
         .company_id
         .ok_or_else(|| AppError::BadRequest("No company associated".into()))?;
 
-    let employee = sqlx::query_as::<_, Employee>(
-        "SELECT * FROM employees WHERE id = $1 AND company_id = $2",
-    )
-    .bind(id)
-    .bind(company_id)
-    .fetch_optional(&state.db)
-    .await?
-    .ok_or_else(|| AppError::NotFound("Employee not found".into()))?;
+    let employee =
+        sqlx::query_as::<_, Employee>("SELECT * FROM employees WHERE id = $1 AND company_id = $2")
+            .bind(id)
+            .bind(company_id)
+            .fetch_optional(&state.db)
+            .await?
+            .ok_or_else(|| AppError::NotFound("Employee not found".into()))?;
 
     Ok(Json(employee))
 }
@@ -93,14 +97,13 @@ async fn update_employee(
         .company_id
         .ok_or_else(|| AppError::BadRequest("No company associated".into()))?;
 
-    let existing = sqlx::query_as::<_, Employee>(
-        "SELECT * FROM employees WHERE id = $1 AND company_id = $2",
-    )
-    .bind(id)
-    .bind(company_id)
-    .fetch_optional(&state.db)
-    .await?
-    .ok_or_else(|| AppError::NotFound("Employee not found".into()))?;
+    let existing =
+        sqlx::query_as::<_, Employee>("SELECT * FROM employees WHERE id = $1 AND company_id = $2")
+            .bind(id)
+            .bind(company_id)
+            .fetch_optional(&state.db)
+            .await?
+            .ok_or_else(|| AppError::NotFound("Employee not found".into()))?;
 
     let name = req.name.unwrap_or(existing.name);
     let wallet = req.wallet_address.unwrap_or(existing.wallet_address);

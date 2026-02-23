@@ -1,17 +1,12 @@
 use axum::{
+    Json, Router,
     extract::{Query, State},
     routing::get,
-    Json, Router,
 };
 use serde::Deserialize;
 use uuid::Uuid;
 
-use crate::{
-    error::AppError,
-    middleware::AuthClaims,
-    models::PayrollEntry,
-    AppState,
-};
+use crate::{AppState, error::AppError, middleware::AuthClaims, models::PayrollEntry};
 
 pub fn router() -> Router<AppState> {
     Router::new().route("/", get(list_payments))

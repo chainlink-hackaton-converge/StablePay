@@ -1,14 +1,14 @@
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- PostgreSQL 18 native UUIDv7 is used; no extension is required.
 
 CREATE TABLE users (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT uuidv7(),
     wallet_address VARCHAR(42) UNIQUE NOT NULL,
     role VARCHAR(20) NOT NULL DEFAULT 'employer',
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE companies (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT uuidv7(),
     owner_id UUID NOT NULL REFERENCES users(id),
     name VARCHAR(255) NOT NULL,
     vault_address VARCHAR(42),
@@ -16,7 +16,7 @@ CREATE TABLE companies (
 );
 
 CREATE TABLE employees (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT uuidv7(),
     company_id UUID NOT NULL REFERENCES companies(id),
     user_id UUID REFERENCES users(id),
     wallet_address VARCHAR(42) NOT NULL,
@@ -27,7 +27,7 @@ CREATE TABLE employees (
 );
 
 CREATE TABLE payrolls (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT uuidv7(),
     company_id UUID NOT NULL REFERENCES companies(id),
     status VARCHAR(20) NOT NULL DEFAULT 'pending',
     total_amount_usdc DECIMAL(18,6),
@@ -39,7 +39,7 @@ CREATE TABLE payrolls (
 );
 
 CREATE TABLE payroll_entries (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT uuidv7(),
     payroll_id UUID NOT NULL REFERENCES payrolls(id),
     employee_id UUID NOT NULL REFERENCES employees(id),
     amount_local DECIMAL(18,2) NOT NULL,
@@ -50,7 +50,7 @@ CREATE TABLE payroll_entries (
 );
 
 CREATE TABLE invoices (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT uuidv7(),
     company_id UUID NOT NULL REFERENCES companies(id),
     payer_address VARCHAR(42) NOT NULL,
     payee_address VARCHAR(42) NOT NULL,
@@ -62,7 +62,7 @@ CREATE TABLE invoices (
 );
 
 CREATE TABLE fx_rate_history (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT uuidv7(),
     base_currency VARCHAR(3) NOT NULL DEFAULT 'USD',
     target_currency VARCHAR(3) NOT NULL,
     rate DECIMAL(18,6) NOT NULL,

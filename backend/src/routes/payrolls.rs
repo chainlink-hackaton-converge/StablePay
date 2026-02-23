@@ -1,15 +1,15 @@
 use axum::{
+    Json, Router,
     extract::{Path, State},
     routing::get,
-    Json, Router,
 };
 use uuid::Uuid;
 
 use crate::{
+    AppState,
     error::AppError,
     middleware::AuthClaims,
     models::{CreatePayrollRequest, Employee, Payroll, PayrollEntry, PayrollWithEntries},
-    AppState,
 };
 
 pub fn router() -> Router<AppState> {
@@ -98,21 +98,19 @@ async fn get_payroll(
         .company_id
         .ok_or_else(|| AppError::BadRequest("No company associated".into()))?;
 
-    let payroll = sqlx::query_as::<_, Payroll>(
-        "SELECT * FROM payrolls WHERE id = $1 AND company_id = $2",
-    )
-    .bind(id)
-    .bind(company_id)
-    .fetch_optional(&state.db)
-    .await?
-    .ok_or_else(|| AppError::NotFound("Payroll not found".into()))?;
+    let payroll =
+        sqlx::query_as::<_, Payroll>("SELECT * FROM payrolls WHERE id = $1 AND company_id = $2")
+            .bind(id)
+            .bind(company_id)
+            .fetch_optional(&state.db)
+            .await?
+            .ok_or_else(|| AppError::NotFound("Payroll not found".into()))?;
 
-    let entries = sqlx::query_as::<_, PayrollEntry>(
-        "SELECT * FROM payroll_entries WHERE payroll_id = $1",
-    )
-    .bind(id)
-    .fetch_all(&state.db)
-    .await?;
+    let entries =
+        sqlx::query_as::<_, PayrollEntry>("SELECT * FROM payroll_entries WHERE payroll_id = $1")
+            .bind(id)
+            .fetch_all(&state.db)
+            .await?;
 
     Ok(Json(PayrollWithEntries { payroll, entries }))
 }
@@ -136,14 +134,13 @@ async fn update_payroll_status(
         .ok_or_else(|| AppError::BadRequest("No company associated".into()))?;
 
     // Verify the payroll belongs to the company
-    let _existing = sqlx::query_as::<_, Payroll>(
-        "SELECT * FROM payrolls WHERE id = $1 AND company_id = $2",
-    )
-    .bind(id)
-    .bind(company_id)
-    .fetch_optional(&state.db)
-    .await?
-    .ok_or_else(|| AppError::NotFound("Payroll not found".into()))?;
+    let _existing =
+        sqlx::query_as::<_, Payroll>("SELECT * FROM payrolls WHERE id = $1 AND company_id = $2")
+            .bind(id)
+            .bind(company_id)
+            .fetch_optional(&state.db)
+            .await?
+            .ok_or_else(|| AppError::NotFound("Payroll not found".into()))?;
 
     let executed_at = if req.status == "completed" {
         Some(chrono::Utc::now().naive_utc())

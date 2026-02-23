@@ -3,33 +3,35 @@ services:
     build:
       context: .
       target: final
+    env_file:
+      - .env
     ports:
-      - 8080:8080
-#     depends_on:
-#       db:
-#         condition: service_healthy
-#   db:
-#     image: postgres:18.2-alpine
-#     restart: always
-#     user: postgres
-#     secrets:
-#       - db-password
-#     volumes:
-#       - db-data:/var/lib/postgresql/data
-#     environment:
-#       - POSTGRES_DB=example
-#       - POSTGRES_PASSWORD_FILE=/run/secrets/db-password
-#     expose:
-#       - 5432
-#     healthcheck:
-#       test: [ "CMD", "pg_isready" ]
-#       interval: 10s
-#       timeout: 5s
-#       retries: 5
+      - 3001:3001
+    depends_on:
+      db:
+        condition: service_healthy
+  db:
+    image: postgres:18.2-alpine
+    restart: always
+    user: postgres
+    secrets:
+      - db-password
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=stablepay
+      - POSTGRES_PASSWORD_FILE=/run/secrets/db-password
+    expose:
+      - 5432
+    healthcheck:
+      test: [ "CMD", "pg_isready" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-# volumes:
-#   db-data:
+volumes:
+  db-data:
 
-# secrets:
-#   db-password:
-#     file: db/password.txt
+secrets:
+  db-password:
+    file: db/password.txt

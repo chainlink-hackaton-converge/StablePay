@@ -1,15 +1,15 @@
 use axum::{
+    Json, Router,
     extract::{Path, State},
     routing::get,
-    Json, Router,
 };
 use uuid::Uuid;
 
 use crate::{
+    AppState,
     error::AppError,
     middleware::AuthClaims,
     models::{Company, CreateCompanyRequest, UpdateCompanyRequest},
-    AppState,
 };
 
 pub fn router() -> Router<AppState> {
@@ -54,14 +54,13 @@ async fn get_company(
     claims: AuthClaims,
     Path(id): Path<Uuid>,
 ) -> Result<Json<Company>, AppError> {
-    let company = sqlx::query_as::<_, Company>(
-        "SELECT * FROM companies WHERE id = $1 AND owner_id = $2",
-    )
-    .bind(id)
-    .bind(claims.sub)
-    .fetch_optional(&state.db)
-    .await?
-    .ok_or_else(|| AppError::NotFound("Company not found".into()))?;
+    let company =
+        sqlx::query_as::<_, Company>("SELECT * FROM companies WHERE id = $1 AND owner_id = $2")
+            .bind(id)
+            .bind(claims.sub)
+            .fetch_optional(&state.db)
+            .await?
+            .ok_or_else(|| AppError::NotFound("Company not found".into()))?;
 
     Ok(Json(company))
 }
@@ -73,14 +72,13 @@ async fn update_company(
     Json(req): Json<UpdateCompanyRequest>,
 ) -> Result<Json<Company>, AppError> {
     // Verify ownership
-    let existing = sqlx::query_as::<_, Company>(
-        "SELECT * FROM companies WHERE id = $1 AND owner_id = $2",
-    )
-    .bind(id)
-    .bind(claims.sub)
-    .fetch_optional(&state.db)
-    .await?
-    .ok_or_else(|| AppError::NotFound("Company not found".into()))?;
+    let existing =
+        sqlx::query_as::<_, Company>("SELECT * FROM companies WHERE id = $1 AND owner_id = $2")
+            .bind(id)
+            .bind(claims.sub)
+            .fetch_optional(&state.db)
+            .await?
+            .ok_or_else(|| AppError::NotFound("Company not found".into()))?;
 
     let name = req.name.unwrap_or(existing.name);
     let vault_address = req.vault_address.or(existing.vault_address);

@@ -1,13 +1,13 @@
-use axum::{extract::State, routing::post, Json, Router};
-use jsonwebtoken::{encode, EncodingKey, Header};
+use axum::{Json, Router, extract::State, routing::post};
+use jsonwebtoken::{EncodingKey, Header, encode};
 use serde::Deserialize;
 use uuid::Uuid;
 
 use crate::{
+    AppState,
     error::AppError,
     middleware::AuthClaims,
     models::{AuthResponse, CreateUserRequest, User},
-    AppState,
 };
 
 pub fn router() -> Router<AppState> {
@@ -26,15 +26,15 @@ async fn register(
     Json(req): Json<CreateUserRequest>,
 ) -> Result<Json<AuthResponse>, AppError> {
     // Check if wallet already exists
-    let existing = sqlx::query_as::<_, User>(
-        "SELECT * FROM users WHERE wallet_address = $1",
-    )
-    .bind(&req.wallet_address)
-    .fetch_optional(&state.db)
-    .await?;
+    let existing = sqlx::query_as::<_, User>("SELECT * FROM users WHERE wallet_address = $1")
+        .bind(&req.wallet_address)
+        .fetch_optional(&state.db)
+        .await?;
 
     if existing.is_some() {
-        return Err(AppError::Conflict("Wallet address already registered".into()));
+        return Err(AppError::Conflict(
+            "Wallet address already registered".into(),
+        ));
     }
 
     let role = req.role.unwrap_or_else(|| "employer".into());
@@ -56,13 +56,11 @@ async fn login(
     State(state): State<AppState>,
     Json(req): Json<LoginRequest>,
 ) -> Result<Json<AuthResponse>, AppError> {
-    let user = sqlx::query_as::<_, User>(
-        "SELECT * FROM users WHERE wallet_address = $1",
-    )
-    .bind(&req.wallet_address)
-    .fetch_optional(&state.db)
-    .await?
-    .ok_or_else(|| AppError::NotFound("User not found".into()))?;
+    let user = sqlx::query_as::<_, User>("SELECT * FROM users WHERE wallet_address = $1")
+        .bind(&req.wallet_address)
+        .fetch_optional(&state.db)
+        .await?
+        .ok_or_else(|| AppError::NotFound("User not found".into()))?;
 
     // Get company if employer
     let company_id = if user.role == "employer" {

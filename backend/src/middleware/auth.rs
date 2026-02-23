@@ -1,20 +1,17 @@
-use axum::{
-    extract::FromRequestParts,
-    http::request::Parts,
-};
-use jsonwebtoken::{decode, DecodingKey, Validation};
+use axum::{extract::FromRequestParts, http::request::Parts};
+use jsonwebtoken::{DecodingKey, Validation, decode};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::{error::AppError, AppState};
+use crate::{AppState, error::AppError};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AuthClaims {
-    pub sub: Uuid,           // user ID
-    pub wallet: String,      // wallet address
-    pub role: String,        // employer or employee
+    pub sub: Uuid,      // user ID
+    pub wallet: String, // wallet address
+    pub role: String,   // employer or employee
     pub company_id: Option<Uuid>,
-    pub exp: usize,          // expiration timestamp
+    pub exp: usize, // expiration timestamp
 }
 
 impl FromRequestParts<AppState> for AuthClaims {
