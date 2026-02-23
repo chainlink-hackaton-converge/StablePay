@@ -1,12 +1,53 @@
 info:
-  name: auth
+  name: 01 Register user
   type: http
   seq: 1
+  tags:
+    - smoke
+    - auth
 
 http:
-  method: GET
-  url: ""
-  auth: inherit
+  method: POST
+  url: "{{base_url}}/api/auth/register"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "wallet_address": "{{wallet_address}}",
+        "role": "employer"
+      }
+
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        const runId = Date.now().toString();
+        const randomSuffix = Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
+        const walletHex = `${runId}${randomSuffix}`.padEnd(40, '0').slice(0, 40);
+
+        if (!bru.getVar('base_url')) {
+          bru.setVar('base_url', 'http://localhost:3001');
+        }
+
+        bru.setVar('wallet_address', `0x${walletHex}`);
+        bru.setVar('company_name', `StablePay Test ${runId}`);
+    - type: after-response
+      code: |-
+        bru.setVar('token', res.body.token);
+        bru.setVar('user_id', res.body.user.id);
+    - type: tests
+      code: |-
+        test('register returns 200', function() {
+          expect(res.status).to.equal(200);
+        });
+
+        test('register returns token and user', function() {
+          expect(res.body.token).to.be.a('string');
+          expect(res.body.user).to.be.an('object');
+        });
 
 settings:
   encodeUrl: true

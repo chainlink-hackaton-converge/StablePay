@@ -1,21 +1,19 @@
 # StablePay Backend
 
-## Simple curl smoke tests
+## Bruno YAML smoke tests
 
-Prerequisites:
-- backend is running (default: `http://localhost:3001`)
-- `curl` and `jq` installed
+Minimal Bruno OpenCollection tests are in [stablepay-api](stablepay-api) and target:
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- unauthorized and authorized `GET /api/companies`
+- `POST /api/companies`
 
-Run:
+Default base URL is `http://localhost:3001`.
 
-```bash
-bash scripts/smoke_routes.sh
-```
-
-Optional custom base URL:
+Run with Bruno CLI (from this backend folder):
 
 ```bash
-BASE_URL=http://localhost:3001 bash scripts/smoke_routes.sh
+npx @usebruno/cli@latest run ./stablepay-api
 ```
 
 ## Docker

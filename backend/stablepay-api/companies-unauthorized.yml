@@ -1,0 +1,25 @@
+info:
+  name: 03 Companies unauthorized
+  type: http
+  seq: 3
+  tags:
+    - smoke
+    - authz
+
+http:
+  method: GET
+  url: "{{base_url}}/api/companies"
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test('unauthorized request returns 401', function() {
+          expect(res.status).to.equal(401);
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

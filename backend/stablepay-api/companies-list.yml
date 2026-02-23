@@ -1,0 +1,35 @@
+info:
+  name: 06 Companies authorized list
+  type: http
+  seq: 6
+  tags:
+    - smoke
+    - companies
+
+http:
+  method: GET
+  url: "{{base_url}}/api/companies"
+  headers:
+    - name: Authorization
+      value: "Bearer {{token}}"
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test('authorized list returns 200', function() {
+          expect(res.status).to.equal(200);
+        });
+
+        test('authorized list includes created company', function() {
+          expect(res.body).to.be.an('array');
+          const createdId = bru.getVar('company_id');
+          const found = res.body.some((company) => company.id === createdId);
+          expect(found).to.equal(true);
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

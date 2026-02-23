@@ -1,0 +1,41 @@
+info:
+  name: 05 Login refresh claims
+  type: http
+  seq: 5
+  tags:
+    - smoke
+    - auth
+
+http:
+  method: POST
+  url: "{{base_url}}/api/auth/login"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "wallet_address": "{{wallet_address}}"
+      }
+
+runtime:
+  scripts:
+    - type: after-response
+      code: |-
+        bru.setVar('token', res.body.token);
+    - type: tests
+      code: |-
+        test('refresh login returns 200', function() {
+          expect(res.status).to.equal(200);
+        });
+
+        test('refresh login keeps token available', function() {
+          expect(res.body.token).to.be.a('string');
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
