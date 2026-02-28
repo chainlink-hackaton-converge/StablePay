@@ -93,6 +93,8 @@ export const api = {
       method: "POST",
       body: JSON.stringify(data),
     }),
+  getPayrollDecisions: (id: string) =>
+    fetchApi<any[]>(`/payrolls/${id}/decisions`),
 
   // Invoices
   getInvoices: () => fetchApi<any[]>("/invoices"),

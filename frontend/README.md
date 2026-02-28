@@ -1,17 +1,18 @@
 # StablePay Frontend
 
-Frontend principal de StablePay (React Router v7 + TypeScript + Tailwind + wagmi/viem).
+Main StablePay frontend (React Router v7 + TypeScript + Tailwind + wagmi/viem).
 
-## MVP incluido
+## Included MVP Scope
 
-- Landing + portales Employer/Employee.
-- Integracion wallet con RainbowKit.
-- Sandbox Web3 (`/sandbox`) para demo tecnica de `viem + wagmi`.
-- Configuracion por variables de entorno (sin hardcode de API).
+- Landing page + Employer and Employee portals.
+- RainbowKit wallet connection.
+- Web3 Sandbox (`/sandbox`) for live `viem + wagmi` demos.
+- Guided onboarding modal and quick navigation menu for presentation flow.
+- Environment-based configuration (no hardcoded API URLs).
 
-## Variables de entorno
+## Environment Variables
 
-Copia `frontend/.env.example` a `frontend/.env`:
+Copy `frontend/.env.example` to `frontend/.env`.
 
 ```bash
 cp .env.example .env
@@ -19,28 +20,30 @@ cp .env.example .env
 
 Variables:
 
-- `VITE_API_BASE_URL`: URL del backend (`http://localhost:3001/api` en local).
-- `VITE_WALLETCONNECT_PROJECT_ID`: Project ID de WalletConnect Cloud.
+- `VITE_API_BASE_URL`: backend URL (`http://localhost:3001/api` locally).
+- `VITE_WALLETCONNECT_PROJECT_ID`: WalletConnect Cloud project id.
+- `VITE_PAYROLL_VAULT_ADDRESS`: deployed payroll contract address.
+- `VITE_INVOICE_ESCROW_ADDRESS`: deployed invoice escrow address.
 
-## Desarrollo local
+## Local Development
 
-Desde la raiz del monorepo:
+From repository root:
 
 ```bash
 npm install
 npm run frontend:dev
 ```
 
-App en `http://localhost:5173`.
+App URL: `http://localhost:5173`.
 
-## Validacion
+## Validation
 
 ```bash
 npm run typecheck -w frontend
 npm run build -w frontend
 ```
 
-## Deployment (Docker)
+## Docker Deployment
 
 Build:
 
@@ -54,13 +57,13 @@ Run:
 docker run --rm -p 3000:3000 stablepay-frontend
 ```
 
-## Demo rapida para hackathon
+## Hackathon Demo Flow
 
-1. Abre `http://localhost:5173/sandbox`.
-2. Conecta wallet con RainbowKit.
-3. Muestra:
-   - bloque actual Arc testnet,
-   - balance wallet,
-   - firma de mensaje,
-   - lectura del contrato `PayrollVault` (si hay direccion configurada).
-
+1. Open `http://localhost:5173`.
+2. Click **Demo Guide** and follow the steps.
+3. Open `/sandbox` and show:
+   - wallet connection,
+   - Arc testnet block read,
+   - message signing,
+   - `PayrollVault` contract read.
+4. Open `/employer/payroll` and show the **CRE Decision Log** section.

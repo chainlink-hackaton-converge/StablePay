@@ -1,7 +1,8 @@
 use axum::{
     Json, Router,
-    extract::{Path, State},
-    routing::get,
+    extract::{Path, Query, State},
+    http::HeaderMap,
+    routing::{get, post},
 };
 use uuid::Uuid;
 
@@ -9,14 +10,20 @@ use crate::{
     AppState,
     error::AppError,
     middleware::AuthClaims,
-    models::{CreatePayrollRequest, Employee, Payroll, PayrollEntry, PayrollWithEntries},
+    models::{
+        CreatePayrollDecisionRequest, CreatePayrollRequest, CrePendingPayrollsResponse, Employee,
+        Payroll, PayrollDecision, PayrollEntry, PayrollWithEntries,
+    },
 };
 
 pub fn router() -> Router<AppState> {
     Router::new()
         .route("/", get(list_payrolls).post(create_payroll))
+        .route("/cre/pending", get(list_pending_payrolls_for_cre))
         .route("/{id}", get(get_payroll))
-        .route("/{id}/execute", axum::routing::post(update_payroll_status))
+        .route("/{id}/execute", post(update_payroll_status))
+        .route("/{id}/decision", post(create_payroll_decision))
+        .route("/{id}/decisions", get(list_payroll_decisions))
 }
 
 async fn list_payrolls(
@@ -162,4 +169,131 @@ async fn update_payroll_status(
     .await?;
 
     Ok(Json(payroll))
+}
+
+#[derive(serde::Deserialize)]
+struct CrePendingQuery {
+    limit: Option<i64>,
+}
+
+async fn list_pending_payrolls_for_cre(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Query(query): Query<CrePendingQuery>,
+) -> Result<Json<CrePendingPayrollsResponse>, AppError> {
+    verify_cre_webhook_secret(&state, &headers)?;
+
+    let limit = query.limit.unwrap_or(25).clamp(1, 200);
+    let payroll_ids = sqlx::query_scalar::<_, Uuid>(
+        "SELECT id FROM payrolls WHERE status = 'pending' ORDER BY scheduled_at ASC LIMIT $1",
+    )
+    .bind(limit)
+    .fetch_all(&state.db)
+    .await?;
+
+    Ok(Json(CrePendingPayrollsResponse { payroll_ids }))
+}
+
+async fn create_payroll_decision(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Path(id): Path<Uuid>,
+    Json(req): Json<CreatePayrollDecisionRequest>,
+) -> Result<Json<PayrollDecision>, AppError> {
+    verify_cre_webhook_secret(&state, &headers)?;
+
+    let normalized_decision = req.decision.trim().to_lowercase();
+    if normalized_decision != "accepted" && normalized_decision != "blocked" {
+        return Err(AppError::BadRequest(
+            "decision must be either 'accepted' or 'blocked'".into(),
+        ));
+    }
+
+    let reason = req.reason.trim();
+    if reason.is_empty() {
+        return Err(AppError::BadRequest("reason is required".into()));
+    }
+
+    let payroll_exists = sqlx::query_scalar::<_, bool>(
+        "SELECT EXISTS (SELECT 1 FROM payrolls WHERE id = $1)",
+    )
+    .bind(id)
+    .fetch_one(&state.db)
+    .await?;
+    if !payroll_exists {
+        return Err(AppError::NotFound("Payroll not found".into()));
+    }
+
+    let decision = sqlx::query_as::<_, PayrollDecision>(
+        "INSERT INTO payroll_decisions (
+            payroll_id, decision, reason, spread_bps, max_deviation_bps, consensus_rate,
+            quote_currency, source_rates, metadata, decided_at
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+         RETURNING *",
+    )
+    .bind(id)
+    .bind(&normalized_decision)
+    .bind(reason)
+    .bind(req.spread_bps)
+    .bind(req.max_deviation_bps)
+    .bind(req.consensus_rate)
+    .bind(req.quote_currency.as_deref())
+    .bind(req.source_rates)
+    .bind(req.metadata)
+    .bind(req.decided_at.unwrap_or_else(|| chrono::Utc::now().naive_utc()))
+    .fetch_one(&state.db)
+    .await?;
+
+    Ok(Json(decision))
+}
+
+async fn list_payroll_decisions(
+    State(state): State<AppState>,
+    claims: AuthClaims,
+    Path(id): Path<Uuid>,
+) -> Result<Json<Vec<PayrollDecision>>, AppError> {
+    let company_id = claims
+        .company_id
+        .ok_or_else(|| AppError::BadRequest("No company associated".into()))?;
+
+    let payroll_exists = sqlx::query_scalar::<_, bool>(
+        "SELECT EXISTS (SELECT 1 FROM payrolls WHERE id = $1 AND company_id = $2)",
+    )
+    .bind(id)
+    .bind(company_id)
+    .fetch_one(&state.db)
+    .await?;
+    if !payroll_exists {
+        return Err(AppError::NotFound("Payroll not found".into()));
+    }
+
+    let decisions = sqlx::query_as::<_, PayrollDecision>(
+        "SELECT * FROM payroll_decisions WHERE payroll_id = $1 ORDER BY decided_at DESC",
+    )
+    .bind(id)
+    .fetch_all(&state.db)
+    .await?;
+
+    Ok(Json(decisions))
+}
+
+fn verify_cre_webhook_secret(state: &AppState, headers: &HeaderMap) -> Result<(), AppError> {
+    let configured_secret = state
+        .cre_webhook_secret
+        .as_deref()
+        .ok_or_else(|| AppError::Unauthorized("CRE webhook secret is not configured".into()))?;
+
+    let provided_secret = headers
+        .get("x-cre-webhook-secret")
+        .and_then(|v| v.to_str().ok())
+        .map(str::trim)
+        .ok_or_else(|| AppError::Unauthorized("Missing x-cre-webhook-secret header".into()))?;
+
+    if provided_secret != configured_secret {
+        return Err(AppError::Unauthorized(
+            "Invalid x-cre-webhook-secret header".into(),
+        ));
+    }
+
+    Ok(())
 }

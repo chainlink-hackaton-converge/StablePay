@@ -1,13 +1,14 @@
 import {
   Runner,
   bytesToHex,
+  consensusIdenticalAggregation,
   consensusMedianAggregation,
   cre,
   encodeCallMsg,
   getNetwork,
   LAST_FINALIZED_BLOCK_NUMBER,
-  ok,
   json,
+  ok,
   sendErrorResponse,
   type HTTPSendRequester,
   type Runtime,
@@ -52,6 +53,9 @@ type WorkflowConfig = {
   quoteCurrency: string;
   maxDeviationBps: number;
   dryRun: boolean;
+  backendApiBaseUrl?: string;
+  backendWebhookSecret?: string;
+  backendPendingLimit: number;
 };
 
 const DEFAULT_CONFIG: WorkflowConfig = {
@@ -60,6 +64,9 @@ const DEFAULT_CONFIG: WorkflowConfig = {
   quoteCurrency: "COP",
   maxDeviationBps: 200,
   dryRun: true,
+  backendApiBaseUrl: undefined,
+  backendWebhookSecret: undefined,
+  backendPendingLimit: 25,
 };
 
 const FX_SOURCES = [
@@ -86,6 +93,16 @@ type SourceRate = {
   rate: number;
 };
 
+type DecisionSyncResult = {
+  enabled: boolean;
+  attempted: number;
+  posted: number;
+  failed: number;
+  payrollIds: string[];
+  errors: string[];
+  skippedReason?: string;
+};
+
 type CronExecutionResult = {
   timestamp: string;
   chainSelectorName: string;
@@ -99,6 +116,7 @@ type CronExecutionResult = {
   isConsensusAccepted: boolean;
   consensusRate: number;
   shouldExecutePayroll: boolean;
+  decisionSync: DecisionSyncResult;
 };
 
 function parseConfig(raw: Uint8Array): WorkflowConfig {
@@ -139,6 +157,22 @@ function parseConfig(raw: Uint8Array): WorkflowConfig {
   const dryRun =
     typeof parsed.dryRun === "boolean" ? parsed.dryRun : DEFAULT_CONFIG.dryRun;
 
+  const backendApiBaseUrl =
+    typeof parsed.backendApiBaseUrl === "string"
+      ? normalizeBaseUrl(parsed.backendApiBaseUrl)
+      : DEFAULT_CONFIG.backendApiBaseUrl;
+
+  const backendWebhookSecret =
+    typeof parsed.backendWebhookSecret === "string"
+      ? parsed.backendWebhookSecret.trim()
+      : DEFAULT_CONFIG.backendWebhookSecret;
+
+  const backendPendingLimit =
+    typeof parsed.backendPendingLimit === "number" &&
+    Number.isFinite(parsed.backendPendingLimit)
+      ? Math.max(1, Math.min(200, Math.floor(parsed.backendPendingLimit)))
+      : DEFAULT_CONFIG.backendPendingLimit;
+
   return {
     schedule,
     chainSelectorName,
@@ -146,7 +180,24 @@ function parseConfig(raw: Uint8Array): WorkflowConfig {
     quoteCurrency,
     maxDeviationBps,
     dryRun,
+    backendApiBaseUrl,
+    backendWebhookSecret,
+    backendPendingLimit,
   };
+}
+
+function normalizeBaseUrl(url: string): string {
+  return url.trim().replace(/\/+$/, "");
+}
+
+function getOptionalSecret(runtime: Runtime<WorkflowConfig>, id: string): string | undefined {
+  try {
+    const result = runtime.getSecret({ id }).result();
+    const value = result.value?.trim();
+    return value && value.length > 0 ? value : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 function resolveVaultAddress(
@@ -166,6 +217,24 @@ function resolveVaultAddress(
   }
 
   return secret.value as Address;
+}
+
+function resolveBackendTarget(runtime: Runtime<WorkflowConfig>, config: WorkflowConfig): {
+  baseUrl?: string;
+  webhookSecret?: string;
+} {
+  const baseUrl =
+    config.backendApiBaseUrl ||
+    getOptionalSecret(runtime, "STABLEPAY_BACKEND_API_BASE_URL");
+
+  const webhookSecret =
+    config.backendWebhookSecret ||
+    getOptionalSecret(runtime, "STABLEPAY_CRE_WEBHOOK_SECRET");
+
+  return {
+    baseUrl: baseUrl ? normalizeBaseUrl(baseUrl) : undefined,
+    webhookSecret,
+  };
 }
 
 function readPendingPayrollIds(
@@ -298,6 +367,189 @@ function fetchFxRate(
   return fetchWithConsensus(sourceUrl, quoteCurrency).result();
 }
 
+function listPendingBackendPayrollIds(
+  runtime: Runtime<WorkflowConfig>,
+  baseUrl: string,
+  webhookSecret: string,
+  limit: number
+): string[] {
+  const httpClient = new cre.capabilities.HTTPClient();
+  const fetchPendingIds = httpClient.sendRequest(
+    runtime,
+    (
+      sendRequester: HTTPSendRequester,
+      requestUrl: string,
+      requestSecret: string
+    ) => {
+      const response = sendRequester
+        .sendRequest({
+          url: requestUrl,
+          method: "GET",
+          headers: {
+            accept: "application/json",
+            "x-cre-webhook-secret": requestSecret,
+          },
+        })
+        .result();
+
+      if (!ok(response)) {
+        throw new Error(
+          `Failed to list backend pending payrolls: HTTP ${response.statusCode}`
+        );
+      }
+
+      const payload = json(response) as { payroll_ids?: unknown };
+      if (!Array.isArray(payload.payroll_ids)) {
+        return [] as string[];
+      }
+
+      return payload.payroll_ids.filter((id): id is string => typeof id === "string");
+    },
+    consensusIdenticalAggregation<string[]>()
+  );
+
+  return fetchPendingIds(
+    `${baseUrl}/api/payrolls/cre/pending?limit=${limit}`,
+    webhookSecret
+  ).result();
+}
+
+function postDecisionToBackend(
+  runtime: Runtime<WorkflowConfig>,
+  baseUrl: string,
+  webhookSecret: string,
+  payrollId: string,
+  body: Record<string, unknown>
+): void {
+  const httpClient = new cre.capabilities.HTTPClient();
+  const postDecision = httpClient.sendRequest(
+    runtime,
+    (
+      sendRequester: HTTPSendRequester,
+      requestUrl: string,
+      requestSecret: string,
+      requestBody: string
+    ) => {
+      const response = sendRequester
+        .sendRequest({
+          url: requestUrl,
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "x-cre-webhook-secret": requestSecret,
+          },
+          body: Buffer.from(requestBody, "utf-8").toString("base64"),
+        })
+        .result();
+
+      if (!ok(response)) {
+        throw new Error(
+          `Failed to write decision for payroll ${payrollId}: HTTP ${response.statusCode}`
+        );
+      }
+
+      return true;
+    },
+    consensusIdenticalAggregation<boolean>()
+  );
+
+  postDecision(
+    `${baseUrl}/api/payrolls/${payrollId}/decision`,
+    webhookSecret,
+    JSON.stringify(body)
+  ).result();
+}
+
+function syncDecisionsToBackend(
+  runtime: Runtime<WorkflowConfig>,
+  config: WorkflowConfig,
+  payload: {
+    timestamp: string;
+    vaultAddress: string;
+    pendingPayrollCount: number;
+    samplePendingPayrolls: PayrollSnapshot[];
+    quoteCurrency: string;
+    fxSources: SourceRate[];
+    spreadBps: number;
+    maxDeviationBps: number;
+    isConsensusAccepted: boolean;
+    consensusRate: number;
+  }
+): DecisionSyncResult {
+  const backend = resolveBackendTarget(runtime, config);
+  if (!backend.baseUrl || !backend.webhookSecret) {
+    return {
+      enabled: false,
+      attempted: 0,
+      posted: 0,
+      failed: 0,
+      payrollIds: [],
+      errors: [],
+      skippedReason:
+        "Missing STABLEPAY_BACKEND_API_BASE_URL and/or STABLEPAY_CRE_WEBHOOK_SECRET",
+    };
+  }
+
+  let payrollIds: string[] = [];
+  try {
+    payrollIds = listPendingBackendPayrollIds(
+      runtime,
+      backend.baseUrl,
+      backend.webhookSecret,
+      config.backendPendingLimit
+    );
+  } catch (error) {
+    return {
+      enabled: true,
+      attempted: 0,
+      posted: 0,
+      failed: 0,
+      payrollIds: [],
+      errors: [error instanceof Error ? error.message : "Unknown backend list error"],
+    };
+  }
+
+  let posted = 0;
+  let failed = 0;
+  const errors: string[] = [];
+
+  for (const payrollId of payrollIds) {
+    try {
+      postDecisionToBackend(runtime, backend.baseUrl, backend.webhookSecret, payrollId, {
+        decision: payload.isConsensusAccepted ? "accepted" : "blocked",
+        reason: payload.isConsensusAccepted
+          ? "Consensus spread within allowed threshold"
+          : `Spread ${payload.spreadBps} bps exceeds ${payload.maxDeviationBps} bps threshold`,
+        spread_bps: payload.spreadBps,
+        max_deviation_bps: payload.maxDeviationBps,
+        consensus_rate: payload.consensusRate,
+        quote_currency: payload.quoteCurrency,
+        source_rates: payload.fxSources,
+        metadata: {
+          triggered_at: payload.timestamp,
+          chain_selector_name: config.chainSelectorName,
+          vault_address: payload.vaultAddress,
+          pending_onchain_count: payload.pendingPayrollCount,
+          sample_onchain_payrolls: payload.samplePendingPayrolls,
+        },
+      });
+      posted += 1;
+    } catch (error) {
+      failed += 1;
+      errors.push(error instanceof Error ? error.message : `Unknown error for ${payrollId}`);
+    }
+  }
+
+  return {
+    enabled: true,
+    attempted: payrollIds.length,
+    posted,
+    failed,
+    payrollIds,
+    errors,
+  };
+}
+
 function deviationBps(values: number[]): number {
   if (values.length < 2) return 0;
   const min = Math.min(...values);
@@ -326,14 +578,29 @@ function onCronTrigger(runtime: Runtime<WorkflowConfig>): CronExecutionResult {
   const isConsensusAccepted = spreadBps <= config.maxDeviationBps;
   const consensusRate = rates.reduce((sum, value) => sum + value, 0) / rates.length;
 
+  const timestamp = runtime.now().toISOString();
+
+  const decisionSync = syncDecisionsToBackend(runtime, config, {
+    timestamp,
+    vaultAddress,
+    pendingPayrollCount: pendingPayrollIds.length,
+    samplePendingPayrolls: samples,
+    quoteCurrency: config.quoteCurrency,
+    fxSources: sourceRates,
+    spreadBps,
+    maxDeviationBps: config.maxDeviationBps,
+    isConsensusAccepted,
+    consensusRate,
+  });
+
   runtime.log(
     `StablePay CRE run | pending=${pendingPayrollIds.length} | ${config.quoteCurrency}/USD=${consensusRate.toFixed(
       6
-    )} | spreadBps=${spreadBps}`
+    )} | spreadBps=${spreadBps} | decisionSync=${decisionSync.posted}/${decisionSync.attempted}`
   );
 
   return {
-    timestamp: runtime.now().toISOString(),
+    timestamp,
     chainSelectorName: config.chainSelectorName,
     vaultAddress,
     pendingPayrollCount: pendingPayrollIds.length,
@@ -345,6 +612,7 @@ function onCronTrigger(runtime: Runtime<WorkflowConfig>): CronExecutionResult {
     isConsensusAccepted,
     consensusRate,
     shouldExecutePayroll: !config.dryRun && isConsensusAccepted,
+    decisionSync,
   };
 }
 

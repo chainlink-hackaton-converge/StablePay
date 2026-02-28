@@ -70,4 +70,22 @@ Desktop project location:
 4. FX auditability.
 5. Web3 sandbox with RainbowKit + viem.
 6. Desktop wrapper MVP for local demos.
+7. CRE decision log per payroll (`accepted` / `blocked` + reason).
 
+## CRE Decision Log Setup
+
+The backend now exposes:
+
+- `POST /api/payrolls/{id}/decision`
+- `GET /api/payrolls/{id}/decisions`
+- `GET /api/payrolls/cre/pending` (CRE-only, secured with webhook header)
+
+Required environment variables:
+
+- `CRE_WEBHOOK_SECRET` (backend)
+- `STABLEPAY_BACKEND_API_BASE_URL` (workflow secret/config)
+- `STABLEPAY_CRE_WEBHOOK_SECRET` (workflow secret/config)
+
+When configured, each CRE run writes decision entries that are visible in:
+
+- Employer dashboard: `/employer/payroll` -> **CRE Decision Log**

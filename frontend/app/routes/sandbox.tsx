@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import { useAccount, useBalance, useBlockNumber, useReadContract, useSignMessage } from "wagmi";
 import { formatUnits, isAddress, zeroAddress } from "viem";
+import { DemoGuide } from "~/components/demo-guide";
+import { QuickNavMenu } from "~/components/quick-nav-menu";
 import { WalletConnect } from "~/components/wallet-connect";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
@@ -11,6 +13,24 @@ import { arcTestnet } from "~/lib/chains";
 import { CONTRACT_ADDRESSES, PAYROLL_VAULT_ABI } from "~/lib/contracts";
 
 const ZERO_ADDRESS = zeroAddress;
+
+const SANDBOX_MENU_ITEMS = [
+  {
+    label: "Home",
+    path: "/",
+    description: "Return to landing and high-level product overview.",
+  },
+  {
+    label: "Employer Dashboard",
+    path: "/employer",
+    description: "Open payroll, invoices, and CRE decision logs.",
+  },
+  {
+    label: "Payroll Runs",
+    path: "/employer/payroll",
+    description: "Show pending payrolls and decision history.",
+  },
+] as const;
 
 export default function SandboxRoute() {
   const [message, setMessage] = useState("StablePay hackathon wallet proof");
@@ -53,19 +73,29 @@ export default function SandboxRoute() {
 
   return (
     <div className="container mx-auto max-w-5xl space-y-6 px-6 py-10">
-      <div className="space-y-3">
-        <Badge variant="secondary">Issue #8: electrobun + viem + rainbow sandbox</Badge>
-        <h1 className="text-3xl font-bold tracking-tight">Web3 Sandbox</h1>
-        <p className="text-muted-foreground">
-          Prueba de integracion con RainbowKit (wallet UX) y viem/wagmi sobre Arc testnet.
-        </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="space-y-3">
+          <Badge variant="secondary">Issue #8: Electrobun + viem + Rainbow Sandbox</Badge>
+          <h1 className="text-3xl font-bold tracking-tight">Web3 Sandbox</h1>
+          <p className="text-muted-foreground">
+            Live integration with RainbowKit wallet UX and viem/wagmi on Arc testnet.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <QuickNavMenu
+            title="Sandbox Navigation"
+            subtitle="Fast links for your demo storyline."
+            items={[...SANDBOX_MENU_ITEMS]}
+          />
+          <DemoGuide mode="public" />
+        </div>
       </div>
 
       <Card>
         <CardHeader className="space-y-2">
-          <CardTitle>1. Conectar Wallet</CardTitle>
+          <CardTitle>1. Connect Wallet</CardTitle>
           <CardDescription>
-            Usa Rainbow, MetaMask u otra wallet compatible via WalletConnect.
+            Connect Rainbow, MetaMask, or any WalletConnect-compatible wallet.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-wrap items-center justify-between gap-3">
@@ -79,20 +109,20 @@ export default function SandboxRoute() {
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>2. Estado de red (viem)</CardTitle>
-            <CardDescription>Lecturas en Arc testnet desde el frontend.</CardDescription>
+            <CardTitle>2. Network State (viem)</CardTitle>
+            <CardDescription>Arc testnet reads from the frontend.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center justify-between rounded-md border p-3">
-              <span className="text-sm text-muted-foreground">Chain ID esperado</span>
+              <span className="text-sm text-muted-foreground">Expected Chain ID</span>
               <span className="font-mono text-sm">{arcTestnet.id}</span>
             </div>
             <div className="flex items-center justify-between rounded-md border p-3">
-              <span className="text-sm text-muted-foreground">Ultimo bloque</span>
+              <span className="text-sm text-muted-foreground">Latest Block</span>
               <span className="font-mono text-sm">{blockNumber?.toString() ?? "..."}</span>
             </div>
             <div className="flex items-center justify-between rounded-md border p-3">
-              <span className="text-sm text-muted-foreground">Balance wallet (USDC gas)</span>
+              <span className="text-sm text-muted-foreground">Wallet Balance (USDC gas)</span>
               <span className="font-mono text-sm">
                 {walletBalance
                   ? `${formatUnits(walletBalance.value, walletBalance.decimals)} ${walletBalance.symbol}`
@@ -100,34 +130,34 @@ export default function SandboxRoute() {
               </span>
             </div>
             <Button variant="outline" onClick={() => refetchBlock()}>
-              Refrescar bloque
+              Refresh Block
             </Button>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>3. Firma de mensaje</CardTitle>
+            <CardTitle>3. Message Signature</CardTitle>
             <CardDescription>
-              Verificacion criptografica local sin exponer la llave privada.
+              Local cryptographic verification without exposing private keys.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="space-y-2">
-              <Label htmlFor="message">Mensaje</Label>
+              <Label htmlFor="message">Message</Label>
               <Input
                 id="message"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                placeholder="Mensaje para firmar"
+                placeholder="Message to sign"
               />
             </div>
             <Button onClick={handleSignMessage} disabled={!isConnected || isPending}>
-              {isPending ? "Firmando..." : "Firmar mensaje"}
+              {isPending ? "Signing..." : "Sign Message"}
             </Button>
             {signature && (
               <div className="rounded-md border bg-muted/30 p-3 text-xs">
-                <p className="mb-1 text-muted-foreground">Firma:</p>
+                <p className="mb-1 text-muted-foreground">Signature:</p>
                 <p className="break-all font-mono">{signature}</p>
               </div>
             )}
@@ -137,37 +167,38 @@ export default function SandboxRoute() {
 
       <Card>
         <CardHeader>
-          <CardTitle>4. Lectura de contrato (PayrollVault)</CardTitle>
+          <CardTitle>4. Contract Read (PayrollVault)</CardTitle>
           <CardDescription>
-            Hook tipado con viem ABI (`getVaultBalance`) desde el contrato principal.
+            Typed viem ABI hook (`getVaultBalance`) against deployed contract state.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="rounded-md border p-3 text-sm">
-            <p className="text-muted-foreground">Contrato configurado</p>
+            <p className="text-muted-foreground">Configured Contract</p>
             <p className="font-mono">{payrollVaultAddress}</p>
           </div>
           {canReadVault ? (
             <div className="rounded-md border p-3 text-sm">
-              <p className="text-muted-foreground">Balance vault del empleador conectado</p>
+              <p className="text-muted-foreground">Connected employer vault balance</p>
               <p className="font-mono">
-                {vaultBalance ? `${formatUnits(vaultBalance, 18)} USDC` : "Sin datos aun"}
+                {vaultBalance ? `${formatUnits(vaultBalance, 18)} USDC` : "No data yet"}
               </p>
             </div>
           ) : !address ? (
             <div className="rounded-md border border-blue-500/30 bg-blue-500/10 p-3 text-sm text-blue-200">
-              Conecta una wallet para leer `getVaultBalance` del contrato.
+              Connect a wallet to read `getVaultBalance`.
             </div>
           ) : (
             <div className="rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-200">
-              Define `PAYROLL_VAULT_ADDRESS` real en frontend para habilitar lectura de contrato.
+              Configure `VITE_PAYROLL_VAULT_ADDRESS` in frontend env to enable contract reads.
             </div>
           )}
           <Button variant="outline" onClick={() => refetchVault()}>
-            Refrescar lectura de contrato
+            Refresh Contract Read
           </Button>
         </CardContent>
       </Card>
     </div>
   );
 }
+

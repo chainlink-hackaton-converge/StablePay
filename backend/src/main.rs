@@ -13,6 +13,7 @@ use tracing_subscriber::EnvFilter;
 pub struct AppState {
     pub db: sqlx::PgPool,
     pub jwt_secret: String,
+    pub cre_webhook_secret: Option<String>,
 }
 
 #[tokio::main]
@@ -42,6 +43,7 @@ async fn main() {
     let state = AppState {
         db: pool,
         jwt_secret: config.jwt_secret,
+        cre_webhook_secret: config.cre_webhook_secret,
     };
 
     let app = Router::new()

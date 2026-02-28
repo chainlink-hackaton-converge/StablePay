@@ -41,3 +41,37 @@ pub struct PayrollWithEntries {
     pub payroll: Payroll,
     pub entries: Vec<PayrollEntry>,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
+pub struct PayrollDecision {
+    pub id: Uuid,
+    pub payroll_id: Uuid,
+    pub decision: String,
+    pub reason: String,
+    pub spread_bps: Option<i32>,
+    pub max_deviation_bps: Option<i32>,
+    pub consensus_rate: Option<f64>,
+    pub quote_currency: Option<String>,
+    pub source_rates: Option<serde_json::Value>,
+    pub metadata: Option<serde_json::Value>,
+    pub decided_at: NaiveDateTime,
+    pub created_at: NaiveDateTime,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct CreatePayrollDecisionRequest {
+    pub decision: String,
+    pub reason: String,
+    pub spread_bps: Option<i32>,
+    pub max_deviation_bps: Option<i32>,
+    pub consensus_rate: Option<f64>,
+    pub quote_currency: Option<String>,
+    pub source_rates: Option<serde_json::Value>,
+    pub metadata: Option<serde_json::Value>,
+    pub decided_at: Option<NaiveDateTime>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct CrePendingPayrollsResponse {
+    pub payroll_ids: Vec<Uuid>,
+}
