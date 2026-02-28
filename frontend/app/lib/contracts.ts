@@ -1,3 +1,5 @@
+import { appEnv } from "./env";
+
 // Contract ABIs - simplified versions for the frontend
 // After compiling contracts, these can be imported from ../../contracts/artifacts
 
@@ -124,10 +126,6 @@ export const INVOICE_ESCROW_ABI = [
 
 // Contract addresses - loaded from env or hardcoded after deployment
 export const CONTRACT_ADDRESSES = {
-  payrollVault: (typeof window !== "undefined" &&
-    (window as any).__ENV__?.PAYROLL_VAULT_ADDRESS) ||
-    "0x0000000000000000000000000000000000000000",
-  invoiceEscrow: (typeof window !== "undefined" &&
-    (window as any).__ENV__?.INVOICE_ESCROW_ADDRESS) ||
-    "0x0000000000000000000000000000000000000000",
+  payrollVault: appEnv.payrollVaultAddress,
+  invoiceEscrow: appEnv.invoiceEscrowAddress,
 } as const;
