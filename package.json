@@ -11,6 +11,8 @@
     "contracts:deploy": "npm run deploy -w contracts",
     "cre:simulate": "cd cre-workflow && cre workflow simulate",
     "frontend:dev": "npm run dev -w frontend",
+    "desktop:dev": "cd desktop/electrobun-stablepay && bun run dev",
+    "desktop:build": "cd desktop/electrobun-stablepay && bun run build",
     "db:up": "docker compose up -d postgres",
     "db:down": "docker compose down"
   }

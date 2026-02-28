@@ -13,12 +13,14 @@ import {
 } from "~/components/ui/select";
 import { toast } from "sonner";
 import { api } from "~/lib/api";
+import { useAccount } from "wagmi";
 
 export default function Register() {
   const navigate = useNavigate();
   const [walletAddress, setWalletAddress] = useState("");
   const [role, setRole] = useState("employer");
   const [loading, setLoading] = useState(false);
+  const { address } = useAccount();
 
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault();
@@ -64,6 +66,17 @@ export default function Register() {
                 onChange={(e) => setWalletAddress(e.target.value)}
                 required
               />
+              {address && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => setWalletAddress(address)}
+                >
+                  Use connected wallet
+                </Button>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="role">I am a...</Label>

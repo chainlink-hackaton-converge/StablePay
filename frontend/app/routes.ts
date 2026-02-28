@@ -8,6 +8,7 @@ import {
 
 export default [
   index("routes/home.tsx"),
+  route("sandbox", "routes/sandbox.tsx"),
   route("login", "auth/login.tsx"),
   route("register", "auth/register.tsx"),
 

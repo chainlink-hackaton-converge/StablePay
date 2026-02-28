@@ -1,13 +1,10 @@
-import { http, createConfig } from "wagmi";
-import { injected, walletConnect } from "wagmi/connectors";
+import { getDefaultConfig } from "@rainbow-me/rainbowkit";
 import { arcTestnet } from "./chains";
+import { appEnv } from "./env";
 
-export const wagmiConfig = createConfig({
+export const wagmiConfig = getDefaultConfig({
+  appName: "StablePay",
+  projectId: appEnv.walletConnectProjectId,
   chains: [arcTestnet],
-  connectors: [
-    injected(),
-  ],
-  transports: {
-    [arcTestnet.id]: http(),
-  },
+  ssr: true,
 });

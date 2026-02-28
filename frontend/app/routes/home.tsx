@@ -16,6 +16,9 @@ export default function Home() {
             <span className="text-xl font-bold">StablePay</span>
           </div>
           <div className="flex items-center gap-3">
+            <Link to="/sandbox">
+              <Button variant="outline">Web3 Sandbox</Button>
+            </Link>
             <Link to="/login">
               <Button variant="ghost">Log In</Button>
             </Link>
@@ -42,6 +45,11 @@ export default function Home() {
           per transaction.
         </p>
         <div className="mt-10 flex items-center justify-center gap-4">
+          <Link to="/sandbox">
+            <Button variant="outline" size="lg">
+              Try Sandbox
+            </Button>
+          </Link>
           <Link to="/register">
             <Button size="lg">Start Paying Globally</Button>
           </Link>

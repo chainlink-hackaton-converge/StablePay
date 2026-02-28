@@ -17,6 +17,7 @@ import {
 import { Separator } from "~/components/ui/separator";
 import { Button } from "~/components/ui/button";
 import { useEffect, useState } from "react";
+import { WalletConnect } from "~/components/wallet-connect";
 
 const navItems = [
   { title: "Dashboard", url: "/employee", icon: "📊" },
@@ -99,6 +100,9 @@ export default function EmployeeLayout() {
           <h2 className="text-sm font-medium">
             {navItems.find((i) => i.url === location.pathname)?.title || "Employee Portal"}
           </h2>
+          <div className="ml-auto">
+            <WalletConnect />
+          </div>
         </header>
         <main className="flex-1 p-6">
           <Outlet />

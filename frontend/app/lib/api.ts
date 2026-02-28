@@ -1,4 +1,6 @@
-const API_BASE = "http://localhost:3001/api";
+import { appEnv } from "./env";
+
+const API_BASE = appEnv.apiBaseUrl;
 
 async function fetchApi<T>(
   endpoint: string,

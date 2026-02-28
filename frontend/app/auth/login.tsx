@@ -6,11 +6,13 @@ import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { toast } from "sonner";
 import { api } from "~/lib/api";
+import { useAccount } from "wagmi";
 
 export default function Login() {
   const navigate = useNavigate();
   const [walletAddress, setWalletAddress] = useState("");
   const [loading, setLoading] = useState(false);
+  const { address } = useAccount();
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -56,6 +58,17 @@ export default function Login() {
                 onChange={(e) => setWalletAddress(e.target.value)}
                 required
               />
+              {address && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => setWalletAddress(address)}
+                >
+                  Use connected wallet
+                </Button>
+              )}
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Signing in..." : "Sign In"}

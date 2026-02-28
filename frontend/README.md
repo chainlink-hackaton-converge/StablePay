@@ -1,87 +1,66 @@
-# Welcome to React Router!
+# StablePay Frontend
 
-A modern, production-ready template for building full-stack React applications using React Router.
+Frontend principal de StablePay (React Router v7 + TypeScript + Tailwind + wagmi/viem).
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router-templates/tree/main/default)
+## MVP incluido
 
-## Features
+- Landing + portales Employer/Employee.
+- Integracion wallet con RainbowKit.
+- Sandbox Web3 (`/sandbox`) para demo tecnica de `viem + wagmi`.
+- Configuracion por variables de entorno (sin hardcode de API).
 
-- 🚀 Server-side rendering
-- ⚡️ Hot Module Replacement (HMR)
-- 📦 Asset bundling and optimization
-- 🔄 Data loading and mutations
-- 🔒 TypeScript by default
-- 🎉 TailwindCSS for styling
-- 📖 [React Router docs](https://reactrouter.com/)
+## Variables de entorno
 
-## Getting Started
+Copia `frontend/.env.example` a `frontend/.env`:
 
-### Installation
+```bash
+cp .env.example .env
+```
 
-Install the dependencies:
+Variables:
+
+- `VITE_API_BASE_URL`: URL del backend (`http://localhost:3001/api` en local).
+- `VITE_WALLETCONNECT_PROJECT_ID`: Project ID de WalletConnect Cloud.
+
+## Desarrollo local
+
+Desde la raiz del monorepo:
 
 ```bash
 npm install
+npm run frontend:dev
 ```
 
-### Development
+App en `http://localhost:5173`.
 
-Start the development server with HMR:
+## Validacion
 
 ```bash
-npm run dev
+npm run typecheck -w frontend
+npm run build -w frontend
 ```
 
-Your application will be available at `http://localhost:5173`.
+## Deployment (Docker)
 
-## Building for Production
-
-Create a production build:
+Build:
 
 ```bash
-npm run build
+docker build -t stablepay-frontend ./frontend
 ```
 
-## Deployment
-
-### Docker Deployment
-
-To build and run using Docker:
+Run:
 
 ```bash
-docker build -t my-app .
-
-# Run the container
-docker run -p 3000:3000 my-app
+docker run --rm -p 3000:3000 stablepay-frontend
 ```
 
-The containerized application can be deployed to any platform that supports Docker, including:
+## Demo rapida para hackathon
 
-- AWS ECS
-- Google Cloud Run
-- Azure Container Apps
-- Digital Ocean App Platform
-- Fly.io
-- Railway
+1. Abre `http://localhost:5173/sandbox`.
+2. Conecta wallet con RainbowKit.
+3. Muestra:
+   - bloque actual Arc testnet,
+   - balance wallet,
+   - firma de mensaje,
+   - lectura del contrato `PayrollVault` (si hay direccion configurada).
 
-### DIY Deployment
-
-If you're familiar with deploying Node applications, the built-in app server is production-ready.
-
-Make sure to deploy the output of `npm run build`
-
-```
-├── package.json
-├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
-├── build/
-│   ├── client/    # Static assets
-│   └── server/    # Server-side code
-```
-
-## Styling
-
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
-
----
-
-Built with ❤️ using React Router.

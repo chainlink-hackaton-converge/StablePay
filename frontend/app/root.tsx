@@ -9,7 +9,9 @@ import {
 
 import type { Route } from "./+types/root";
 import "./app.css";
+import "@rainbow-me/rainbowkit/styles.css";
 import { Toaster } from "~/components/ui/sonner";
+import { Web3Provider } from "~/components/web3-provider";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -30,15 +32,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>StablePay — Cross-Border Payroll on Arc</title>
+        <title>StablePay - Cross-Border Payroll on Arc</title>
         <Meta />
         <Links />
       </head>
       <body className="min-h-screen bg-background text-foreground antialiased">
-        {children}
-        <Toaster />
-        <ScrollRestoration />
-        <Scripts />
+        <Web3Provider>
+          {children}
+          <Toaster />
+          <ScrollRestoration />
+          <Scripts />
+        </Web3Provider>
       </body>
     </html>
   );
@@ -78,3 +82,4 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
     </main>
   );
 }
+
