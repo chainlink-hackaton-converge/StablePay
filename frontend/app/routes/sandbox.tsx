@@ -30,7 +30,8 @@ export default function SandboxRoute() {
     () => CONTRACT_ADDRESSES.payrollVault as `0x${string}`,
     []
   );
-  const canReadVault = Boolean(address) && payrollVaultAddress !== ZERO_ADDRESS;
+  const hasContractAddress = payrollVaultAddress !== ZERO_ADDRESS;
+  const canReadVault = Boolean(address) && hasContractAddress;
 
   const { data: vaultBalance, refetch: refetchVault } = useReadContract({
     abi: PAYROLL_VAULT_ABI,
@@ -153,6 +154,10 @@ export default function SandboxRoute() {
                 {vaultBalance ? `${formatUnits(vaultBalance, 18)} USDC` : "Sin datos aun"}
               </p>
             </div>
+          ) : !address ? (
+            <div className="rounded-md border border-blue-500/30 bg-blue-500/10 p-3 text-sm text-blue-200">
+              Conecta una wallet para leer `getVaultBalance` del contrato.
+            </div>
           ) : (
             <div className="rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-200">
               Define `PAYROLL_VAULT_ADDRESS` real en frontend para habilitar lectura de contrato.
@@ -166,4 +171,3 @@ export default function SandboxRoute() {
     </div>
   );
 }
-
