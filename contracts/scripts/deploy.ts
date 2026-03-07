@@ -2,6 +2,11 @@ import { ethers, network } from "hardhat";
 
 async function main() {
   const [deployer] = await ethers.getSigners();
+  if (!deployer) {
+    throw new Error(
+      "No deployer account. Set PRIVATE_KEY or DEPLOYER_PRIVATE_KEY in .env (in project root)."
+    );
+  }
   console.log("Deploying contracts with account:", deployer.address);
   console.log("Network:", network.name);
 
