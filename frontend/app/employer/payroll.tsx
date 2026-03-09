@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
+import { toast } from "sonner";
+import { api } from "~/lib/api";
+import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { Card, CardContent } from "~/components/ui/card";
+import { Skeleton } from "~/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -10,10 +14,6 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/table";
-import { Badge } from "~/components/ui/badge";
-import { Skeleton } from "~/components/ui/skeleton";
-import { toast } from "sonner";
-import { api } from "~/lib/api";
 
 function statusBadge(status: string) {
   const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
@@ -40,6 +40,7 @@ export default function Payroll() {
         setLoading(false);
       }
     }
+
     load();
   }, []);
 
@@ -70,7 +71,9 @@ export default function Payroll() {
             <div className="p-8 text-center text-muted-foreground">
               <p>No payrolls yet. Create your first payroll run to pay your team.</p>
               <Link to="/employer/payroll/new" className="mt-2 inline-block">
-                <Button variant="outline" size="sm">Create Payroll</Button>
+                <Button variant="outline" size="sm">
+                  Create Payroll
+                </Button>
               </Link>
             </div>
           ) : (
@@ -86,29 +89,25 @@ export default function Payroll() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {payrolls.map((p) => (
-                  <TableRow key={p.id}>
+                {payrolls.map((payroll) => (
+                  <TableRow key={payroll.id}>
                     <TableCell className="font-mono text-sm">
-                      {p.id.slice(0, 8)}...
+                      {payroll.id.slice(0, 8)}...
                     </TableCell>
+                    <TableCell>{new Date(payroll.scheduled_at).toLocaleDateString()}</TableCell>
                     <TableCell>
-                      {new Date(p.scheduled_at).toLocaleDateString()}
+                      {payroll.total_amount_usdc
+                        ? `$${parseFloat(payroll.total_amount_usdc).toFixed(2)}`
+                        : "-"}
                     </TableCell>
+                    <TableCell>{statusBadge(payroll.status)}</TableCell>
                     <TableCell>
-                      {p.total_amount_usdc
-                        ? `$${parseFloat(p.total_amount_usdc).toFixed(2)}`
-                        : "—"}
-                    </TableCell>
-                    <TableCell>{statusBadge(p.status)}</TableCell>
-                    <TableCell>
-                      {p.executed_at
-                        ? new Date(p.executed_at).toLocaleDateString()
-                        : "—"}
+                      {payroll.executed_at
+                        ? new Date(payroll.executed_at).toLocaleDateString()
+                        : "-"}
                     </TableCell>
                     <TableCell className="font-mono text-xs">
-                      {p.tx_hash
-                        ? `${p.tx_hash.slice(0, 10)}...`
-                        : "—"}
+                      {payroll.tx_hash ? `${payroll.tx_hash.slice(0, 10)}...` : "-"}
                     </TableCell>
                   </TableRow>
                 ))}

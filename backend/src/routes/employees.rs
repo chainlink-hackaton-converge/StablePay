@@ -46,12 +46,19 @@ async fn create_employee(
         .ok_or_else(|| AppError::BadRequest("No company associated".into()))?;
 
     let currency = req.salary_currency.unwrap_or_else(|| "USD".into());
+    let linked_user_id = sqlx::query_scalar::<_, Uuid>(
+        "SELECT id FROM users WHERE LOWER(wallet_address) = LOWER($1)",
+    )
+    .bind(&req.wallet_address)
+    .fetch_optional(&state.db)
+    .await?;
 
     let employee = sqlx::query_as::<_, Employee>(
-        "INSERT INTO employees (company_id, wallet_address, name, salary_amount, salary_currency)
-         VALUES ($1, $2, $3, $4, $5) RETURNING *",
+        "INSERT INTO employees (company_id, user_id, wallet_address, name, salary_amount, salary_currency)
+         VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
     )
     .bind(company_id)
+    .bind(linked_user_id)
     .bind(&req.wallet_address)
     .bind(&req.name)
     .bind(&req.salary_amount)

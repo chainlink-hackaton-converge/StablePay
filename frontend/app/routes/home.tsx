@@ -1,17 +1,22 @@
 import { Link } from "react-router";
-import { Button } from "~/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import { Badge } from "~/components/ui/badge";
+import { Button } from "~/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "~/components/ui/card";
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="border-b border-border">
         <div className="container mx-auto flex items-center justify-between px-6 py-4">
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-sm">SP</span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+              <span className="text-sm font-bold text-primary-foreground">SP</span>
             </div>
             <span className="text-xl font-bold">StablePay</span>
           </div>
@@ -26,7 +31,6 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Hero */}
       <section className="container mx-auto px-6 py-24 text-center">
         <Badge variant="secondary" className="mb-4">
           Built on Arc Chain + Chainlink CRE
@@ -37,9 +41,8 @@ export default function Home() {
           <span className="text-primary">in stablecoins</span>
         </h1>
         <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
-          Cross-border payroll and invoice settlement powered by Chainlink CRE
-          for automated FX conversion. Private, instant, and costs less than $0.01
-          per transaction.
+          Cross-border payroll and invoice settlement powered by Chainlink CRE for automated FX
+          conversion. Private, instant, and costs less than $0.01 per transaction.
         </p>
         <div className="mt-10 flex items-center justify-center gap-4">
           <Link to="/register">
@@ -53,15 +56,14 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Features */}
       <section className="container mx-auto px-6 pb-24">
         <div className="grid gap-6 md:grid-cols-3">
           <Card>
             <CardHeader>
               <CardTitle>Automated FX Rates</CardTitle>
               <CardDescription>
-                Chainlink CRE fetches live FX rates from multiple APIs with
-                consensus verification. No manual rate checks.
+                Chainlink CRE fetches live FX rates from multiple APIs with consensus verification.
+                No manual rate checks.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -78,8 +80,8 @@ export default function Home() {
             <CardHeader>
               <CardTitle>Private Payments</CardTitle>
               <CardDescription>
-                Arc chain's opt-in privacy keeps salary amounts confidential.
-                Only authorized parties with view keys can see amounts.
+                Arc chain&apos;s opt-in privacy keeps salary amounts confidential. Only authorized
+                parties with view keys can see amounts.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -94,8 +96,8 @@ export default function Home() {
             <CardHeader>
               <CardTitle>USDC Settlement</CardTitle>
               <CardDescription>
-                All payments settle in USDC on Arc chain. Sub-second finality,
-                $0.01 transaction fees, no volatile tokens needed.
+                All payments settle in USDC on Arc chain. Sub-second finality, $0.01 transaction
+                fees, no volatile tokens needed.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -108,9 +110,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Footer */}
       <footer className="border-t border-border py-8 text-center text-sm text-muted-foreground">
-        <p>StablePay — Chainlink Convergence Hackathon 2026</p>
+        <p>StablePay - Chainlink Convergence Hackathon 2026</p>
       </footer>
     </div>
   );

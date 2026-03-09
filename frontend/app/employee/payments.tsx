@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { toast } from "sonner";
+import { api } from "~/lib/api";
+import { Badge } from "~/components/ui/badge";
+import { Card, CardContent } from "~/components/ui/card";
+import { Skeleton } from "~/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -8,10 +12,6 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/table";
-import { Badge } from "~/components/ui/badge";
-import { Skeleton } from "~/components/ui/skeleton";
-import { toast } from "sonner";
-import { api } from "~/lib/api";
 
 export default function EmployeePayments() {
   const [payments, setPayments] = useState<any[]>([]);
@@ -20,16 +20,15 @@ export default function EmployeePayments() {
   useEffect(() => {
     async function load() {
       try {
-        // In a real app, we'd filter by the current employee's ID
         const data = await api.getPayments();
         setPayments(data);
-      } catch (err: any) {
-        // May fail if no company is associated
+      } catch {
         toast.error("Could not load payments");
       } finally {
         setLoading(false);
       }
     }
+
     load();
   }, []);
 
@@ -70,40 +69,38 @@ export default function EmployeePayments() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {payments.map((p) => (
-                  <TableRow key={p.id}>
+                {payments.map((payment) => (
+                  <TableRow key={payment.id}>
                     <TableCell className="font-mono text-sm">
-                      {p.id.slice(0, 8)}...
+                      {payment.id.slice(0, 8)}...
                     </TableCell>
                     <TableCell>
-                      {parseFloat(p.amount_local).toLocaleString(undefined, {
+                      {parseFloat(payment.amount_local).toLocaleString(undefined, {
                         minimumFractionDigits: 2,
                       })}
                     </TableCell>
                     <TableCell>
-                      <Badge variant="secondary">{p.currency}</Badge>
+                      <Badge variant="secondary">{payment.currency}</Badge>
                     </TableCell>
                     <TableCell>
-                      {p.amount_usdc
-                        ? `$${parseFloat(p.amount_usdc).toFixed(2)}`
-                        : "—"}
+                      {payment.amount_usdc
+                        ? `$${parseFloat(payment.amount_usdc).toFixed(2)}`
+                        : "-"}
                     </TableCell>
                     <TableCell className="font-mono text-sm">
-                      {p.fx_rate
-                        ? parseFloat(p.fx_rate).toFixed(4)
-                        : "—"}
+                      {payment.fx_rate ? parseFloat(payment.fx_rate).toFixed(4) : "-"}
                     </TableCell>
                     <TableCell>
                       <Badge
                         variant={
-                          p.status === "completed"
+                          payment.status === "completed"
                             ? "default"
-                            : p.status === "pending"
-                            ? "secondary"
-                            : "destructive"
+                            : payment.status === "pending"
+                              ? "secondary"
+                              : "destructive"
                         }
                       >
-                        {p.status}
+                        {payment.status}
                       </Badge>
                     </TableCell>
                   </TableRow>

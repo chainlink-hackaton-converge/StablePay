@@ -1,120 +1,114 @@
 # StablePay
 
-> Pay anyone, anywhere, in stablecoins — privately and instantly
+Pay anyone, anywhere, in stablecoins - privately and instantly.
 
-**Chainlink Convergence Hackathon 2026** | DeFi / Onchain Finance
+StablePay is a cross-border payroll and invoice settlement platform for Arc Testnet. Employers manage teams, schedule payroll runs, and create escrow-backed invoices from a web UI or a Windows desktop shell. A Chainlink CRE workflow reads pending payroll state from Arc, fetches live FX data from external APIs, and produces a verifiable simulation result for payroll automation.
 
-## Overview
+## Stack
 
-StablePay is a cross-border payroll and invoice settlement platform deployed on Arc chain that uses Chainlink CRE workflows to automate scheduled payments with real-time FX rate conversion. Arc's opt-in privacy keeps salary amounts confidential. The entire platform is USDC-denominated.
+- Frontend: React Router v7, TypeScript, shadcn/ui, wagmi, viem
+- Backend: Rust, Axum, SQLx, PostgreSQL 17
+- Contracts: Solidity, Hardhat, Arc Testnet
+- Automation: Chainlink CRE SDK + CRE CLI
+- Desktop demo shell: Electrobun on Windows
 
-## Architecture
+## Chainlink Usage
 
-```
-User (Browser)  →  Frontend (React Router v7 + shadcn/ui)
-                      ↓ REST API
-                   Backend (Rust Axum + PostgreSQL)
-                      ↓ Chain Events
-                   Arc Chain (Testnet, Chain ID: 5042002)
-                   ├── PayrollVault.sol
-                   └── InvoiceEscrow.sol
-                      ↑ CRE Writes
-                   Chainlink CRE (DON)
-                   └── Cron trigger → FX rates → Batch payment
-```
+These are the primary Chainlink CRE files in this repository:
 
-## Tech Stack
+- `stablepay-cre/stablepay-payroll/main.ts`
+- `stablepay-cre/stablepay-payroll/src/workflow.ts`
+- `stablepay-cre/stablepay-payroll/workflow.yaml`
+- `stablepay-cre/project.yaml`
 
-| Layer | Technology |
-|---|---|
-| Smart Contracts | Solidity ^0.8.24 on Arc (EVM) |
-| Oracle/Automation | Chainlink CRE TypeScript SDK |
-| Frontend | React Router v7 + shadcn/ui + Tailwind v4 |
-| Backend | Rust + Axum + SQLx + PostgreSQL 17 |
-| Chain | Arc Testnet (Chain ID: 5042002, USDC gas) |
-| Wallet | wagmi + viem |
+The workflow:
 
-## Quick Start
+- reads pending payroll IDs from the `PayrollVault` contract on Arc Testnet
+- fetches FX data from external APIs
+- aggregates the rate result through CRE HTTP consensus helpers
+- returns a simulation payload that can be demonstrated from the CLI
+
+## Local Run
 
 ### Prerequisites
 
 - Node.js 20+
-- Rust (stable)
-- Docker & Docker Compose
-- CRE CLI (`curl -sSfL https://raw.githubusercontent.com/smartcontractkit/cre-cli/main/install.sh | bash`)
+- Bun 1.3+
+- Rust stable
+- PostgreSQL 17
+- CRE CLI 1.3+
 
-### 1. Clone & Setup
+### Environment
 
-```bash
-git clone <repo-url>
-cd stablepay
-cp .env.example .env
+Create `.env` in the repo root and set:
+
+```env
+DATABASE_URL=postgres://stablepay:stablepay_dev@localhost:5432/stablepay
+JWT_SECRET=dev-secret-change-in-production
+BACKEND_PORT=3001
+ARC_RPC_URL=https://rpc.testnet.arc.network
+ARC_CHAIN_ID=5042002
+ARC_EXPLORER_URL=https://testnet.arcscan.app
+PAYROLL_VAULT_ADDRESS=0xb096d1d2615d48c0B89724563798DcBe89065Bb3
+INVOICE_ESCROW_ADDRESS=0x23599da9826e06cBc963b695959fb70711823015
 ```
 
-### 2. Start Database
+### Install
 
 ```bash
-docker compose up -d postgres
-```
-
-### 3. Install Dependencies
-
-```bash
-# Root workspace (links contracts, frontend, CRE workflow)
 npm install
-
-# Backend (Rust)
 cd backend && cargo build
 ```
 
-### 4. Deploy Contracts
+### Run
+
+Terminal 1:
 
 ```bash
-# Compile
-npm run contracts:compile
-
-# Deploy to Arc testnet (update .env with deployed addresses)
-npm run contracts:deploy
+npm run backend:dev
 ```
 
-### 5. Start Development
+Terminal 2:
 
 ```bash
-# Terminal 1: Backend
-cd backend && cargo run
-
-# Terminal 2: Frontend
 npm run frontend:dev
+```
 
-# Terminal 3: CRE Simulation
+Terminal 3:
+
+```bash
+cre login
 npm run cre:simulate
 ```
 
-### 6. Access
+### Contracts
 
-- **Frontend:** http://localhost:5173
-- **Backend API:** http://localhost:3001
-- **pgAdmin:** http://localhost:5050
+Compile:
+
+```bash
+npm run contracts:compile
+```
+
+Deploy to Arc Testnet after setting `PRIVATE_KEY` or `DEPLOYER_PRIVATE_KEY` in `.env`:
+
+```bash
+npm run contracts:deploy
+```
+
+## Demo Notes
+
+- Web app: `http://localhost:5173`
+- Backend API: `http://localhost:3001/api`
+- Windows desktop shell: `desktop/electrobun-stablepay/build/dev-win-x64/StablePayDesktop-dev/bin/launcher.exe`
+- CRE demo command: `cre workflow simulate ./stablepay-cre/stablepay-payroll -T dev --trigger-index 0`
+- CRE login is required once per machine before running the simulation
 
 ## Project Structure
 
+```text
+backend/                         Rust API and PostgreSQL access
+contracts/                       PayrollVault and InvoiceEscrow contracts
+frontend/                        Employer and employee UI
+desktop/electrobun-stablepay/    Windows desktop wrapper for the frontend
+stablepay-cre/                   Chainlink CRE workflow project
 ```
-stablepay/
-├── contracts/          # Solidity smart contracts (Hardhat)
-├── cre-workflow/       # Chainlink CRE TypeScript workflow
-├── frontend/           # React Router v7 + shadcn/ui
-├── backend/            # Rust Axum API server
-├── docker-compose.yml  # PostgreSQL + pgAdmin
-└── .cursor/            # Cursor AI rules & MCP config
-```
-
-## Core Features
-
-1. **Automated Payroll** — CRE cron trigger fetches live FX rates → calculates USDC amounts → executes batch payment on Arc
-2. **Invoice Escrow** — Create B2B invoices with milestone-based escrow
-3. **Privacy** — Arc's opt-in privacy shields salary/invoice amounts
-4. **FX Rate Audit Trail** — Every payment records the FX rate used, sourced from multiple APIs with consensus verification
-
-## Team
-
-Built for the Chainlink Convergence Hackathon (Feb 6 – Mar 1, 2026)

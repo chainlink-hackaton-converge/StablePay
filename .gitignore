@@ -12,6 +12,9 @@ contracts/typechain-types/
 # CRE
 cre-workflow/.secrets
 cre-workflow/dist/
+stablepay-cre/stablepay-payroll/main.js
+stablepay-cre/stablepay-payroll/main.wasm
+stablepay-cre/stablepay-payroll/tmp.js
 
 # Rust
 backend/target/
@@ -30,3 +33,6 @@ Thumbs.db
 
 # Docker
 pgdata/
+
+# Local logs
+logs/

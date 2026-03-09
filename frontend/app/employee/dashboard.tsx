@@ -1,16 +1,20 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
-import { Badge } from "~/components/ui/badge";
 import { Link } from "react-router";
+import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "~/components/ui/card";
 
 export default function EmployeeDashboard() {
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold">Welcome to StablePay</h2>
-        <p className="text-muted-foreground">
-          View your payment history and receipts
-        </p>
+        <p className="text-muted-foreground">View your payment history and receipts</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
@@ -27,7 +31,7 @@ export default function EmployeeDashboard() {
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Last Payment</CardDescription>
-            <CardTitle className="text-3xl">—</CardTitle>
+            <CardTitle className="text-3xl">-</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-xs text-muted-foreground">No payments yet</p>
@@ -84,7 +88,8 @@ export default function EmployeeDashboard() {
             <div>
               <p className="font-medium">Instant USDC Payment</p>
               <p className="text-sm text-muted-foreground">
-                USDC is sent directly to your wallet on Arc chain. Sub-second finality, $0.01 fees.
+                USDC is sent directly to your wallet on Arc chain. Sub-second finality, $0.01
+                fees.
               </p>
             </div>
           </div>

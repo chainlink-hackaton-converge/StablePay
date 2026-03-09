@@ -42,12 +42,21 @@ export default function Settings() {
         });
         toast.success("Company updated!");
       } else {
+        const storedUserRaw = localStorage.getItem("stablepay_user");
+        const storedUser = storedUserRaw ? JSON.parse(storedUserRaw) : null;
+        if (!storedUser?.wallet_address) {
+          throw new Error("Session wallet address is missing. Please sign in again.");
+        }
+
         const company = await api.createCompany({
           name: companyName,
           vault_address: vaultAddress || undefined,
         });
+        const refreshedSession = await api.login(storedUser.wallet_address);
+        localStorage.setItem("stablepay_token", refreshedSession.token);
+        localStorage.setItem("stablepay_user", JSON.stringify(refreshedSession.user));
         setCompanies([company]);
-        toast.success("Company created! Please log in again to refresh your session.");
+        toast.success("Company created and session refreshed!");
       }
     } catch (err: any) {
       toast.error(err.message || "Failed to save");
