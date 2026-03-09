@@ -100,7 +100,7 @@ npm run contracts:deploy
 - Web app: `http://localhost:5173`
 - Backend API: `http://localhost:3001/api`
 - Windows desktop shell: `desktop/electrobun-stablepay/build/dev-win-x64/StablePayDesktop-dev/bin/launcher.exe`
-- CRE demo command: `cre workflow simulate ./stablepay-cre/stablepay-payroll -T dev --trigger-index 0`
+- CRE demo command: `cre workflow simulate ./stablepay-payroll -T dev --trigger-index 0 --project-root ./stablepay-cre`
 - CRE login is required once per machine before running the simulation
 
 ## Project Structure

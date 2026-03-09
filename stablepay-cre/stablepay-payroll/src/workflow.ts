@@ -4,7 +4,6 @@ import {
   CronCapability,
   EVMClient,
   encodeCallMsg,
-  getNetwork,
   handler,
   HTTPClient,
   LAST_FINALIZED_BLOCK_NUMBER,
@@ -27,6 +26,7 @@ const PAYROLL_VAULT_ABI = [
 ] as const;
 
 const ARC_CHAIN_ID = 5042002;
+const ARC_CHAIN_SELECTOR = 5042002n;
 
 export type WorkflowConfig = {
   schedule: string;
@@ -51,16 +51,7 @@ function onPayrollTrigger(
   _payload: CronPayload,
   config: WorkflowConfig
 ): string {
-  const network = getNetwork({
-    chainFamily: "evm",
-    chainSelectorName: "arc-testnet",
-    isTestnet: true,
-  });
-  if (!network) {
-    throw new Error("Arc testnet not found in CRE network registry");
-  }
-
-  const evmClient = new EVMClient(network.chainSelector.selector);
+  const evmClient = new EVMClient(ARC_CHAIN_SELECTOR);
   const httpClient = new HTTPClient();
   const callData = encodeFunctionData({
     abi: PAYROLL_VAULT_ABI,
